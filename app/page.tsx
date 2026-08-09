@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { productos } from "../lib/data";
-import { supabase } from "../lib/supabase";
 
 interface Producto {
   id: number;
@@ -15,24 +14,9 @@ interface Producto {
   imagenes: string[];
 }
 
-interface Resena {
-  id: number;
-  producto_id: number;
-  rating: number;
-  comentario: string;
-  fecha: string;
-}
-
-type ResenasPorProducto = Record<string, Resena[]>;
-type ResenaInsert = Omit<Resena, "id">;
-
 export default function Home() {
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
-  const [resenas, setResenas] = useState<ResenasPorProducto>({});
-  const [ratingTemp, setRatingTemp] = useState(0);
-  const [comentarioTemp, setComentarioTemp] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const stored = window.localStorage.getItem("favoritos");
@@ -45,31 +29,6 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    const adminValue = window.localStorage.getItem("scissor_admin");
-    setIsAdmin(adminValue === "true");
-  }, []);
-
-  const fetchResenas = async () => {
-    const { data, error } = await supabase.from<Resena>("resenas").select("*");
-    if (error) {
-      console.error("Error cargando reseñas:", error);
-      return;
-    }
-
-    const agrupadas: ResenasPorProducto = {};
-    data?.forEach((item) => {
-      const key = String(item.producto_id);
-      agrupadas[key] = agrupadas[key] ? [item, ...agrupadas[key]] : [item];
-    });
-
-    setResenas(agrupadas);
-  };
-
-  useEffect(() => {
-    void fetchResenas();
-  }, []);
-
   const toggleFavorito = (id: string) => {
     setFavoritos((prev) => {
       const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
@@ -77,59 +36,6 @@ export default function Home() {
       return next;
     });
   };
-
-  const agregarResena = async (productoId: string) => {
-    const comentario = comentarioTemp.trim();
-    if (ratingTemp === 0 || comentario.length === 0) {
-      return;
-    }
-
-    const fecha = new Date().toLocaleDateString("es-PE", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-
-    const nuevaResena: ResenaInsert = {
-      producto_id: Number(productoId),
-      rating: ratingTemp,
-      comentario,
-      fecha,
-    };
-
-    const { error } = await supabase.from("resenas").insert([nuevaResena]);
-    if (error) {
-      console.error("Error guardando reseña:", error);
-      return;
-    }
-
-    setRatingTemp(0);
-    setComentarioTemp("");
-    void fetchResenas();
-  };
-
-  const eliminarResena = async (resenaId: number) => {
-    const { error } = await supabase.from("resenas").delete().eq("id", resenaId);
-    if (error) {
-      console.error("Error eliminando reseña:", error);
-      return;
-    }
-
-    void fetchResenas();
-  };
-
-  const activateAdmin = () => {
-    const pwd = prompt("Clave de administrador:");
-    if (pwd === "scissor2026") {
-      window.localStorage.setItem("scissor_admin", "true");
-      setIsAdmin(true);
-      alert("¡Modo Admin activado!");
-    } else {
-      alert("Clave incorrecta");
-    }
-  };
-
-  const resenasActuales = productoSeleccionado ? resenas[productoSeleccionado.id.toString()] ?? [] : [];
 
   return (
     <main className="min-h-screen bg-white text-black px-4 py-6">
@@ -140,22 +46,12 @@ export default function Home() {
             const productId = producto.id.toString();
             const activo = favoritos.includes(productId);
             const imageUrl = producto.imagenes[0] ?? "";
-            const resenasProducto = resenas[productId] ?? [];
-            const promedio =
-              resenasProducto.length > 0
-                ? resenasProducto.reduce((acc, resena) => acc + resena.rating, 0) / resenasProducto.length
-                : 0;
-            const estrellasPromedio = Math.round(promedio);
 
             return (
               <article
                 key={producto.id}
                 className="group space-y-3 cursor-pointer rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                onClick={() => {
-                  setProductoSeleccionado(producto);
-                  setRatingTemp(0);
-                  setComentarioTemp("");
-                }}
+                onClick={() => setProductoSeleccionado(producto)}
               >
                 <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100 relative">
                   <img src={imageUrl} alt={producto.nombre} className="object-cover w-full h-full" />
@@ -188,18 +84,6 @@ export default function Home() {
                   <p className="text-sm font-semibold text-black">{producto.nombre}</p>
                   <p className="text-xs text-neutral-500">{producto.marca}</p>
                   <p className="mt-2 text-sm font-semibold text-black">S/ {producto.precio.toFixed(2)}</p>
-                  {resenasProducto.length > 0 ? (
-                    <p className="mt-1 text-sm text-yellow-500">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <span key={i} className={i < estrellasPromedio ? "text-yellow-400" : "text-neutral-300"}>
-                          ★
-                        </span>
-                      ))}{" "}
-                      <span className="text-xs text-neutral-500">({resenasProducto.length})</span>
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-xs text-gray-400">Sin reseñas aún</p>
-                  )}
                 </div>
               </article>
             );
@@ -229,7 +113,7 @@ export default function Home() {
               }}
               className="absolute right-16 top-4 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100"
               aria-pressed={productoSeleccionado ? favoritos.includes(productoSeleccionado.id.toString()) : false}
-              aria-label={favoritos.includes(productoSeleccionado.id.toString()) ? "Quitar de favoritos" : "Agregar a favoritos"}
+              aria-label={favoritos.includes(productoSeleccionado?.id.toString() ?? "") ? "Quitar de favoritos" : "Agregar a favoritos"}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -282,72 +166,6 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="space-y-4 rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-4">
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Reseñas</p>
-                  {resenasActuales.length === 0 ? (
-                    <p className="mt-2 text-sm text-neutral-600">Sé el primero en dejar una reseña.</p>
-                  ) : (
-                    <div className="mt-3 space-y-3 max-h-32 overflow-y-auto pr-2">
-                      {resenasActuales.map((resena: Resena) => (
-                        <div key={resena.id} className="rounded-2xl bg-white p-3 border border-neutral-200">
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }, (_, i) => (
-                              <span key={i} className={`text-lg ${i < resena.rating ? "text-yellow-400" : "text-neutral-300"}`}>
-                                ★
-                              </span>
-                            ))}
-                            {isAdmin && (
-                              <button
-                                type="button"
-                                onClick={() => eliminarResena(resena.id)}
-                                className="ml-auto text-xs text-red-500"
-                              >
-                                Eliminar
-                              </button>
-                            )}
-                          </div>
-                          <p className="mt-2 text-sm text-neutral-700">{resena.comentario}</p>
-                          <p className="mt-2 text-xs text-neutral-500">{resena.fecha}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setRatingTemp(i + 1)}
-                        className={`rounded-full px-2 py-1 text-lg transition ${
-                          i < ratingTemp ? "text-yellow-400" : "text-neutral-300"
-                        }`}
-                        aria-label={`Seleccionar ${i + 1} estrellas`}
-                      >
-                        ★
-                      </button>
-                    ))}
-                  </div>
-                  <textarea
-                    value={comentarioTemp}
-                    onChange={(event) => setComentarioTemp(event.target.value)}
-                    rows={4}
-                    placeholder="Escribe tu reseña..."
-                    className="w-full rounded-3xl border border-neutral-200 bg-white p-3 text-sm text-neutral-700 outline-none focus:border-black focus:ring-2 focus:ring-black/10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => productoSeleccionado && agregarResena(productoSeleccionado.id.toString())}
-                    className="w-full rounded-3xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900"
-                  >
-                    Publicar Reseña
-                  </button>
-                </div>
-              </div>
-
               <div className="grid gap-3">
                 <a
                   href="https://wa.me/51982846339"
@@ -370,20 +188,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      <footer>
-        <button
-          type="button"
-          onClick={activateAdmin}
-          className="mt-8 block w-full text-center text-xs text-gray-400 hover:text-black"
-        >
-          Admin
-        </button>
-      </footer>
     </main>
   );
 }
-'''
-path.write_text(content, encoding='utf-8')
-print('wrote', len(content), 'chars to', path)
-PY

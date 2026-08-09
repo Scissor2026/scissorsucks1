@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { productos } from "../../lib/data";
-import { supabase } from "../../lib/supabase";
 
 interface Producto {
   id: number;
@@ -15,24 +14,9 @@ interface Producto {
   imagenes: string[];
 }
 
- 
-interface Resena {
-  id: number;
-  producto_id: number;
-  rating: number;
-  comentario: string;
-  fecha: string;
-}
-
-type ResenasPorProducto = Record<string, Resena[]>;
-
 export default function FavoritosPage() {
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
-  const [resenas, setResenas] = useState<ResenasPorProducto>({});
-  const [ratingTemp, setRatingTemp] = useState(0);
-  const [comentarioTemp, setComentarioTemp] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const stored = window.localStorage.getItem("favoritos");
@@ -45,58 +29,6 @@ export default function FavoritosPage() {
     }
   }, []);
 
-  const fetchResenas = async () => {
-    const { data, error } = await supabase.from("resenas").select("*");
-    if (error) {
-      console.error("Error cargando reseñas:", error);
-      return;
-    }
-
-    const agrupadas: ResenasPorProducto = {};
-    data?.forEach((item) => {
-      const key = String(item.producto_id);
-      const resena: Resena = {
-        id: item.id,
-        producto_id: item.producto_id,
-        rating: item.rating,
-        comentario: item.comentario,
-        fecha: item.fecha,
-      };
-      agrupadas[key] = agrupadas[key] ? [resena, ...agrupadas[key]] : [resena];
-    });
-
-    setResenas(agrupadas);
-  };
-
-  useEffect(() => {
-    void fetchResenas();
-  }, []);
-
-  useEffect(() => {
-    const a = window.localStorage.getItem("scissor_admin");
-    setIsAdmin(a === "true");
-  }, []);
-
-  const activateAdmin = () => {
-    const pwd = prompt("Clave de administrador:");
-    if (pwd === "scissor2026") {
-      window.localStorage.setItem("scissor_admin", "true");
-      setIsAdmin(true);
-      alert("¡Modo Admin activado!");
-    } else {
-      alert("Clave incorrecta");
-    }
-  };
-
-  const eliminarResena = async (resenaId: number) => {
-    const { error } = await supabase.from("resenas").delete().eq("id", resenaId);
-    if (error) {
-      console.error("Error eliminando reseña:", error);
-      return;
-    }
-    void fetchResenas();
-  };
-
   const toggleFavorito = (id: string) => {
     setFavoritos((prev) => {
       const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
@@ -105,59 +37,20 @@ export default function FavoritosPage() {
     });
   };
 
-  const agregarResena = async (productoId: string) => {
-    const comentario = comentarioTemp.trim();
-    if (ratingTemp === 0 || comentario.length === 0) return;
-
-    const fecha = new Date().toLocaleDateString("es-PE", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-
-    const { error } = await supabase.from("resenas").insert([
-      {
-        producto_id: Number(productoId),
-        rating: ratingTemp,
-        comentario,
-        fecha,
-      },
-    ]);
-
-    if (error) {
-      console.error("Error guardando reseña:", error);
-      return;
-    }
-
-    setRatingTemp(0);
-    setComentarioTemp("");
-    void fetchResenas();
-  };
-
   const favoritosProductos = productos.filter((producto) => favoritos.includes(producto.id.toString()));
-
-  const resenasActuales = productoSeleccionado ? resenas[productoSeleccionado.id.toString()] ?? [] : [];
 
   return (
     <main className="min-h-screen bg-white text-black px-4 py-6">
       <section className="mt-10 flex min-h-[calc(100vh-96px)] flex-col items-center justify-center text-center px-4">
         <h1 className="text-4xl font-bold text-black sm:text-5xl">Tus Favoritos</h1>
         {favoritosProductos.length === 0 ? (
-          <p className="mt-4 max-w-xl text-base text-neutral-600 sm:text-lg">
-            Aún no hay productos guardados.
-          </p>
+          <p className="mt-4 max-w-xl text-base text-neutral-600 sm:text-lg">Aún no hay productos guardados.</p>
         ) : (
           <div className="mt-8 grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
             {favoritosProductos.map((producto) => {
               const productId = producto.id.toString();
               const activo = favoritos.includes(productId);
               const imageUrl = producto.imagenes[0] ?? "";
-              const resenasProducto = resenas[productId] ?? [];
-              const promedio =
-                resenasProducto.length > 0
-                  ? resenasProducto.reduce((acc: number, r: Resena) => acc + r.rating, 0) / resenasProducto.length
-                  : 0;
-              const estrellasPromedio = Math.round(promedio);
 
               return (
                 <article
@@ -166,11 +59,7 @@ export default function FavoritosPage() {
                   onClick={() => setProductoSeleccionado(producto)}
                 >
                   <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100 relative">
-                    <img
-                      src={imageUrl}
-                      alt={producto.nombre}
-                      className="object-cover w-full h-full"
-                    />
+                    <img src={imageUrl} alt={producto.nombre} className="object-cover w-full h-full" />
                     <button
                       type="button"
                       onClick={(event) => {
@@ -186,11 +75,13 @@ export default function FavoritosPage() {
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"
-                        className={`w-6 h-6 transition-all ${
-                          activo ? "fill-pink-500 stroke-pink-500" : "fill-transparent stroke-gray-900"
-                        }`}
+                        className={`w-6 h-6 transition-all ${activo ? "fill-pink-500 stroke-pink-500" : "fill-transparent stroke-gray-900"}`}
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -198,18 +89,6 @@ export default function FavoritosPage() {
                     <p className="text-sm font-semibold text-black">{producto.nombre}</p>
                     <p className="text-xs text-neutral-500">{producto.marca}</p>
                     <p className="mt-2 text-sm font-semibold text-black">S/ {producto.precio.toFixed(2)}</p>
-                    {resenasProducto.length > 0 ? (
-                      <p className="mt-1 text-sm text-yellow-500">
-                        {Array.from({ length: 5 }, (_, i) => (
-                          <span key={i} className={i < estrellasPromedio ? "text-yellow-400" : "text-neutral-300"}>
-                            ★
-                          </span>
-                        ))}{" "}
-                        <span className="text-xs text-neutral-500">({resenasProducto.length})</span>
-                      </p>
-                    ) : (
-                      <p className="mt-1 text-xs text-gray-400">Sin reseñas aún</p>
-                    )}
                   </div>
                 </article>
               );
@@ -240,19 +119,19 @@ export default function FavoritosPage() {
               }}
               className="absolute right-16 top-4 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100"
               aria-pressed={productoSeleccionado ? favoritos.includes(productoSeleccionado.id.toString()) : false}
-              aria-label={favoritos.includes(productoSeleccionado.id.toString()) ? "Quitar de favoritos" : "Agregar a favoritos"}
+              aria-label={favoritos.includes(productoSeleccionado?.id.toString() ?? "") ? "Quitar de favoritos" : "Agregar a favoritos"}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
-                className={`w-6 h-6 transition-all ${
-                  productoSeleccionado && favoritos.includes(productoSeleccionado.id.toString())
-                    ? "fill-pink-500 stroke-pink-500"
-                    : "fill-transparent stroke-gray-900"
-                }`}
+                className={`w-6 h-6 transition-all ${productoSeleccionado && favoritos.includes(productoSeleccionado.id.toString()) ? "fill-pink-500 stroke-pink-500" : "fill-transparent stroke-gray-900"}`}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                />
               </svg>
             </button>
 
@@ -293,72 +172,6 @@ export default function FavoritosPage() {
                 </div>
               </div>
 
-                <div className="space-y-4 rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-4">
-                  <div>
-                    <p className="text-sm font-semibold text-neutral-900">Reseñas</p>
-                    {resenasActuales.length === 0 ? (
-                      <p className="mt-2 text-sm text-neutral-600">Sé el primero en dejar una reseña.</p>
-                    ) : (
-                      <div className="mt-3 space-y-3 max-h-32 overflow-y-auto pr-2">
-                        {resenasActuales.map((resena: Resena) => (
-                          <div key={resena.id} className="rounded-2xl bg-white p-3 border border-neutral-200">
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: 5 }, (_, i) => (
-                                <span key={i} className={`text-lg ${i < resena.rating ? "text-yellow-400" : "text-neutral-300"}`}>
-                                  ★
-                                </span>
-                              ))}
-                              {isAdmin && (
-                                <button
-                                  type="button"
-                                  onClick={() => eliminarResena(resena.id)}
-                                  className="ml-auto text-xs text-red-500"
-                                >
-                                  Eliminar
-                                </button>
-                              )}
-                            </div>
-                            <p className="mt-2 text-sm text-neutral-700">{resena.comentario}</p>
-                            <p className="mt-2 text-xs text-neutral-500">{resena.fecha}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setRatingTemp(i + 1)}
-                          className={`rounded-full px-2 py-1 text-lg transition ${
-                            i < ratingTemp ? "text-yellow-400" : "text-neutral-300"
-                          }`}
-                          aria-label={`Seleccionar ${i + 1} estrellas`}
-                        >
-                          ★
-                        </button>
-                      ))}
-                    </div>
-                    <textarea
-                      value={comentarioTemp}
-                      onChange={(event) => setComentarioTemp(event.target.value)}
-                      rows={4}
-                      placeholder="Escribe tu reseña..."
-                      className="w-full rounded-3xl border border-neutral-200 bg-white p-3 text-sm text-neutral-700 outline-none focus:border-black focus:ring-2 focus:ring-black/10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => productoSeleccionado && agregarResena(productoSeleccionado.id.toString())}
-                      className="w-full rounded-3xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900"
-                    >
-                      Publicar Reseña
-                    </button>
-                  </div>
-                </div>
-
               <div className="grid gap-3">
                 <a
                   href="https://wa.me/51982846339"
@@ -381,15 +194,6 @@ export default function FavoritosPage() {
           </div>
         </div>
       )}
-      <footer>
-        <button
-          type="button"
-          onClick={activateAdmin}
-          className="text-xs text-gray-400 hover:text-black mt-8 block text-center cursor-pointer"
-        >
-          Admin
-        </button>
-      </footer>
     </main>
   );
 }

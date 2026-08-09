@@ -30,11 +30,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Link href="/" className="flex items-center gap-3">
             <div className="w-16 h-16 overflow-hidden flex items-center justify-center shrink-0">
               <Image
-                src="/logo.png"
+                src="/IMG_20260809_133253.jpg"
                 alt="SCISSOR SUCKS logo"
-                width={40}
-                height={40}
-                className="object-cover scale-[1.7] mix-blend-multiply"
+                width={56}
+                height={56}
+                className="w-14 h-14 object-cover scale-[1.7] mix-blend-multiply"
               />
             </div>
             <span className="text-base font-bold tracking-wider text-black">SCISSOR SUCKS</span>

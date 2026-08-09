@@ -16,19 +16,20 @@ interface Producto {
 }
 
  
-interface Reseña {
+interface Resena {
   id: number;
+  producto_id: number;
   rating: number;
   comentario: string;
   fecha: string;
 }
 
-type ReseñasPorProducto = Record<string, Reseña[]>;
+type ResenasPorProducto = Record<string, Resena[]>;
 
 export default function FavoritosPage() {
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
-  const [reseñas, setReseñas] = useState<ReseñasPorProducto>({});
+  const [resenas, setResenas] = useState<ResenasPorProducto>({});
   const [ratingTemp, setRatingTemp] = useState(0);
   const [comentarioTemp, setComentarioTemp] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -44,30 +45,31 @@ export default function FavoritosPage() {
     }
   }, []);
 
-  const fetchReseñas = async () => {
-    const { data, error } = await supabase.from("reseñas").select("*");
+  const fetchResenas = async () => {
+    const { data, error } = await supabase.from("resenas").select("*");
     if (error) {
       console.error("Error cargando reseñas:", error);
       return;
     }
 
-    const agrupadas: ReseñasPorProducto = {};
+    const agrupadas: ResenasPorProducto = {};
     data?.forEach((item) => {
       const key = String(item.producto_id);
-      const reseña: Reseña = {
+      const resena: Resena = {
         id: item.id,
+        producto_id: item.producto_id,
         rating: item.rating,
         comentario: item.comentario,
         fecha: item.fecha,
       };
-      agrupadas[key] = agrupadas[key] ? [reseña, ...agrupadas[key]] : [reseña];
+      agrupadas[key] = agrupadas[key] ? [resena, ...agrupadas[key]] : [resena];
     });
 
-    setReseñas(agrupadas);
+    setResenas(agrupadas);
   };
 
   useEffect(() => {
-    void fetchReseñas();
+    void fetchResenas();
   }, []);
 
   useEffect(() => {
@@ -86,13 +88,13 @@ export default function FavoritosPage() {
     }
   };
 
-  const eliminarReseña = async (reseñaId: number) => {
-    const { error } = await supabase.from("reseñas").delete().eq("id", reseñaId);
+  const eliminarResena = async (resenaId: number) => {
+    const { error } = await supabase.from("resenas").delete().eq("id", resenaId);
     if (error) {
       console.error("Error eliminando reseña:", error);
       return;
     }
-    void fetchReseñas();
+    void fetchResenas();
   };
 
   const toggleFavorito = (id: string) => {
@@ -103,7 +105,7 @@ export default function FavoritosPage() {
     });
   };
 
-  const agregarReseña = async (productoId: string) => {
+  const agregarResena = async (productoId: string) => {
     const comentario = comentarioTemp.trim();
     if (ratingTemp === 0 || comentario.length === 0) return;
 
@@ -113,12 +115,14 @@ export default function FavoritosPage() {
       year: "numeric",
     });
 
-    const { error } = await supabase.from("reseñas").insert({
-      producto_id: Number(productoId),
-      rating: ratingTemp,
-      comentario,
-      fecha,
-    });
+    const { error } = await supabase.from("resenas").insert([
+      {
+        producto_id: Number(productoId),
+        rating: ratingTemp,
+        comentario,
+        fecha,
+      },
+    ]);
 
     if (error) {
       console.error("Error guardando reseña:", error);
@@ -127,12 +131,12 @@ export default function FavoritosPage() {
 
     setRatingTemp(0);
     setComentarioTemp("");
-    void fetchReseñas();
+    void fetchResenas();
   };
 
   const favoritosProductos = productos.filter((producto) => favoritos.includes(producto.id.toString()));
 
-  const reseñasActuales = productoSeleccionado ? reseñas[productoSeleccionado.id.toString()] ?? [] : [];
+  const resenasActuales = productoSeleccionado ? resenas[productoSeleccionado.id.toString()] ?? [] : [];
 
   return (
     <main className="min-h-screen bg-white text-black px-4 py-6">
@@ -148,10 +152,10 @@ export default function FavoritosPage() {
               const productId = producto.id.toString();
               const activo = favoritos.includes(productId);
               const imageUrl = producto.imagenes[0] ?? "";
-              const reseñasProducto = reseñas[productId] ?? [];
+              const resenasProducto = resenas[productId] ?? [];
               const promedio =
-                reseñasProducto.length > 0
-                  ? reseñasProducto.reduce((acc, r) => acc + r.rating, 0) / reseñasProducto.length
+                resenasProducto.length > 0
+                  ? resenasProducto.reduce((acc: number, r: Resena) => acc + r.rating, 0) / resenasProducto.length
                   : 0;
               const estrellasPromedio = Math.round(promedio);
 
@@ -194,14 +198,14 @@ export default function FavoritosPage() {
                     <p className="text-sm font-semibold text-black">{producto.nombre}</p>
                     <p className="text-xs text-neutral-500">{producto.marca}</p>
                     <p className="mt-2 text-sm font-semibold text-black">S/ {producto.precio.toFixed(2)}</p>
-                    {reseñasProducto.length > 0 ? (
+                    {resenasProducto.length > 0 ? (
                       <p className="mt-1 text-sm text-yellow-500">
                         {Array.from({ length: 5 }, (_, i) => (
                           <span key={i} className={i < estrellasPromedio ? "text-yellow-400" : "text-neutral-300"}>
                             ★
                           </span>
                         ))}{" "}
-                        <span className="text-xs text-neutral-500">({reseñasProducto.length})</span>
+                        <span className="text-xs text-neutral-500">({resenasProducto.length})</span>
                       </p>
                     ) : (
                       <p className="mt-1 text-xs text-gray-400">Sin reseñas aún</p>
@@ -292,30 +296,30 @@ export default function FavoritosPage() {
                 <div className="space-y-4 rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-4">
                   <div>
                     <p className="text-sm font-semibold text-neutral-900">Reseñas</p>
-                    {reseñasActuales.length === 0 ? (
+                    {resenasActuales.length === 0 ? (
                       <p className="mt-2 text-sm text-neutral-600">Sé el primero en dejar una reseña.</p>
                     ) : (
                       <div className="mt-3 space-y-3 max-h-32 overflow-y-auto pr-2">
-                        {reseñasActuales.map((reseña) => (
-                          <div key={reseña.id} className="rounded-2xl bg-white p-3 border border-neutral-200">
+                        {resenasActuales.map((resena: Resena) => (
+                          <div key={resena.id} className="rounded-2xl bg-white p-3 border border-neutral-200">
                             <div className="flex items-center gap-1">
                               {Array.from({ length: 5 }, (_, i) => (
-                                <span key={i} className={`text-lg ${i < reseña.rating ? "text-yellow-400" : "text-neutral-300"}`}>
+                                <span key={i} className={`text-lg ${i < resena.rating ? "text-yellow-400" : "text-neutral-300"}`}>
                                   ★
                                 </span>
                               ))}
                               {isAdmin && (
                                 <button
                                   type="button"
-                                  onClick={() => eliminarReseña(reseña.id)}
+                                  onClick={() => eliminarResena(resena.id)}
                                   className="ml-auto text-xs text-red-500"
                                 >
                                   Eliminar
                                 </button>
                               )}
                             </div>
-                            <p className="mt-2 text-sm text-neutral-700">{reseña.comentario}</p>
-                            <p className="mt-2 text-xs text-neutral-500">{reseña.fecha}</p>
+                            <p className="mt-2 text-sm text-neutral-700">{resena.comentario}</p>
+                            <p className="mt-2 text-xs text-neutral-500">{resena.fecha}</p>
                           </div>
                         ))}
                       </div>
@@ -347,7 +351,7 @@ export default function FavoritosPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => productoSeleccionado && agregarReseña(productoSeleccionado.id.toString())}
+                      onClick={() => productoSeleccionado && agregarResena(productoSeleccionado.id.toString())}
                       className="w-full rounded-3xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900"
                     >
                       Publicar Reseña

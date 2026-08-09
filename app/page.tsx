@@ -9,9 +9,9 @@ export default function Home() {
           <Image
             src="/logo.png"
             alt="SCISSOR SUCKS logo"
-            width={32}
-            height={32}
-            className="h-8 w-auto object-contain"
+            width={28}
+            height={28}
+            className="h-7 w-auto object-contain"
           />
           <span className="text-base font-bold tracking-wider text-black">SCISSOR SUCKS</span>
         </div>

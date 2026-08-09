@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { productos } from "../data";
 
@@ -42,25 +41,22 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => toggleFavorito(producto.id)}
-                  className="absolute top-3 right-3 z-10 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100 overflow-hidden"
+                  className="absolute top-3 right-3 z-10 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100"
                   aria-pressed={activo}
                   aria-label={activo ? "Quitar de favoritos" : "Agregar a favoritos"}
                 >
-                  <Image
-                    src="/grok_1786299036465.jpg"
-                    alt="Favorito"
-                    width={24}
-                    height={24}
-                    className="h-6 w-6 object-contain"
-                    style={
-                      activo
-                        ? {
-                            filter:
-                              "brightness(0) saturate(100%) invert(20%) sepia(90%) saturate(7000%) hue-rotate(330deg)",
-                          }
-                        : {}
-                    }
-                  />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill={activo ? "#ec4899" : "transparent"}
+                    stroke={activo ? "#ec4899" : "currentColor"}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-6 w-6"
+                  >
+                    <path d="M20.8 4.6c-1.3-1.3-3.4-1.3-4.7 0L12 8.7 7.9 4.6c-1.3-1.3-3.4-1.3-4.7 0-1.3 1.3-1.3 3.4 0 4.7l4.6 4.6c.2.2.4.4.7.5.3.2.6.2.9 0 .3-.1.5-.3.7-.5l4.6-4.6c1.3-1.3 1.3-3.4 0-4.7z" />
+                  </svg>
                 </button>
                 <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-neutral-500 bg-white/70">
                   [SCISSOR SUCKS]

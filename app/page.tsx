@@ -1,34 +1,31 @@
 import Image from "next/image";
+import Link from "next/link";
 import { productos } from "../data";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-black">
       <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <Image
             src="/logo.png"
             alt="SCISSOR SUCKS logo"
-            width={28}
-            height={28}
-            className="h-7 w-auto object-contain"
+            width={40}
+            height={40}
+            className="h-10 w-auto object-contain"
           />
           <span className="text-base font-bold tracking-wider text-black">SCISSOR SUCKS</span>
-        </div>
+        </Link>
 
-        <button
-          type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-700 transition hover:bg-neutral-100"
-          aria-label="Favoritos"
-        >
+        <Link href="/favoritos" aria-label="Favoritos" className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-700 transition hover:bg-neutral-100">
           <Image
-            src="/1000038295.jpg"
+            src="/grok_1786299036465.jpg"
             alt="Favoritos"
-            width={24}
-            height={24}
-            className="h-6 w-6 object-contain"
+            width={32}
+            height={32}
+            className="h-8 w-8 object-contain"
           />
-        </button>
+        </Link>
       </header>
 
       <section className="grid grid-cols-2 gap-3 px-3 py-4">

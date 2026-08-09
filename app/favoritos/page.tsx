@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { productos } from "../../lib/data";
 
 interface Producto {
@@ -30,7 +30,6 @@ export default function FavoritosPage() {
   const [ratingTemp, setRatingTemp] = useState(0);
   const [comentarioTemp, setComentarioTemp] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const adminClickRef = useRef({ count: 0, timeout: 0 as number | null });
 
   useEffect(() => {
     const stored = window.localStorage.getItem("favoritos");
@@ -59,28 +58,14 @@ export default function FavoritosPage() {
     setIsAdmin(a === "true");
   }, []);
 
-  const handleAdminClick = () => {
-    const ref = adminClickRef.current;
-    ref.count += 1;
-    if (ref.timeout) window.clearTimeout(ref.timeout);
-    ref.timeout = window.setTimeout(() => {
-      ref.count = 0;
-      ref.timeout = null;
-    }, 800);
-    if (ref.count >= 3) {
-      ref.count = 0;
-      if (ref.timeout) {
-        window.clearTimeout(ref.timeout);
-        ref.timeout = null;
-      }
-      const pwd = prompt("Clave de administrador:");
-      if (pwd === "scissor2026") {
-        window.localStorage.setItem("scissor_admin", "true");
-        setIsAdmin(true);
-        alert("Modo admin activado");
-      } else {
-        alert("Clave incorrecta");
-      }
+  const activateAdmin = () => {
+    const pwd = prompt("Clave de administrador:");
+    if (pwd === "scissor2026") {
+      window.localStorage.setItem("scissor_admin", "true");
+      setIsAdmin(true);
+      alert("¡Modo Admin activado!");
+    } else {
+      alert("Clave incorrecta");
     }
   };
 
@@ -138,7 +123,7 @@ export default function FavoritosPage() {
   return (
     <main className="min-h-screen bg-white text-black px-4 py-6">
       <section className="mt-10 flex min-h-[calc(100vh-96px)] flex-col items-center justify-center text-center px-4">
-        <h1 onClick={handleAdminClick} className="text-4xl font-bold text-black sm:text-5xl cursor-pointer">Tus Favoritos</h1>
+        <h1 className="text-4xl font-bold text-black sm:text-5xl">Tus Favoritos</h1>
         {favoritosProductos.length === 0 ? (
           <p className="mt-4 max-w-xl text-base text-neutral-600 sm:text-lg">
             Aún no hay productos guardados.
@@ -378,6 +363,15 @@ export default function FavoritosPage() {
           </div>
         </div>
       )}
+      <footer>
+        <button
+          type="button"
+          onClick={activateAdmin}
+          className="text-xs text-gray-400 hover:text-black mt-8 block text-center cursor-pointer"
+        >
+          Admin
+        </button>
+      </footer>
     </main>
   );
 }

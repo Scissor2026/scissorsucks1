@@ -12,7 +12,7 @@ interface ProductoPageProps {
 
 export default function ProductoPage({ params }: ProductoPageProps) {
   const { id } = params;
-  const producto = productos.find((item) => item.id === id);
+  const producto = productos.find((item) => item.id.toString() === id.toString());
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [imagenIndex, setImagenIndex] = useState(0);
 
@@ -40,8 +40,8 @@ export default function ProductoPage({ params }: ProductoPageProps) {
     );
   }
 
-  const imagenes = producto.imagenes.length > 0 ? producto.imagenes : [producto.imagen];
-  const activo = favoritos.includes(producto.id);
+  const imagenes = producto.imagenes;
+  const activo = favoritos.includes(producto.id.toString());
 
   const toggleFavorito = (event: React.MouseEvent<HTMLButtonElement>, productId: string) => {
     event.preventDefault();

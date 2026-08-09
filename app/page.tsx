@@ -30,13 +30,16 @@ export default function Home() {
     <main className="min-h-screen bg-white text-black px-3 py-4">
       <section className="grid grid-cols-2 gap-3">
         {productos.map((producto) => {
-          const activo = favoritos.includes(producto.id);
+          const productId = producto.id.toString();
+          const activo = favoritos.includes(productId);
+          const imageUrl = producto.imagenes[0] ?? "";
+
           return (
             <Link key={producto.id} href={`/producto/${producto.id}`} className="space-y-3">
               <article className="space-y-3">
                 <div className="aspect-square bg-neutral-100 rounded-lg relative overflow-hidden border border-neutral-200">
                   <img
-                    src={producto.imagen}
+                    src={imageUrl}
                     alt={producto.nombre}
                     className="object-cover w-full h-full"
                   />
@@ -45,7 +48,7 @@ export default function Home() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      toggleFavorito(producto.id);
+                      toggleFavorito(productId);
                     }}
                     className="absolute top-3 right-3 z-10 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100"
                     aria-pressed={activo}
@@ -68,8 +71,8 @@ export default function Home() {
                 </div>
                 <div className="px-1">
                   <p className="text-sm font-semibold text-black">{producto.nombre}</p>
-                  <p className="text-xs text-neutral-500">{producto.estilo}</p>
-                  <p className="text-sm font-semibold text-black">{producto.precio}</p>
+                  <p className="text-xs text-neutral-500">{producto.marca}</p>
+                  <p className="text-sm font-semibold text-black">S/ {producto.precio.toFixed(2)}</p>
                 </div>
               </article>
             </Link>

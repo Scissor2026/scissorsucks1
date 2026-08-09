@@ -26,7 +26,7 @@ export default function FavoritosPage() {
     });
   };
 
-  const favoritosProductos = productos.filter((producto) => favoritos.includes(producto.id));
+  const favoritosProductos = productos.filter((producto) => favoritos.includes(producto.id.toString()));
 
   return (
     <main className="min-h-screen bg-white text-black px-4 py-6">
@@ -39,7 +39,9 @@ export default function FavoritosPage() {
         ) : (
           <div className="mt-8 grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
             {favoritosProductos.map((producto) => {
-              const activo = favoritos.includes(producto.id);
+              const productId = producto.id.toString();
+              const activo = favoritos.includes(productId);
+              const imageUrl = producto.imagenes[0] ?? "";
               return (
                 <Link
                   key={producto.id}
@@ -49,7 +51,7 @@ export default function FavoritosPage() {
                   <article className="space-y-3">
                     <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100 relative">
                       <img
-                        src={producto.imagen}
+                        src={imageUrl}
                         alt={producto.nombre}
                         className="object-cover w-full h-full"
                       />
@@ -58,7 +60,7 @@ export default function FavoritosPage() {
                         onClick={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
-                          toggleFavorito(producto.id);
+                          toggleFavorito(productId);
                         }}
                         className="absolute top-3 right-3 z-10 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100"
                         aria-pressed={activo}
@@ -78,8 +80,8 @@ export default function FavoritosPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-black">{producto.nombre}</p>
-                      <p className="text-xs text-neutral-500">{producto.estilo}</p>
-                      <p className="mt-2 text-sm font-semibold text-black">{producto.precio}</p>
+                      <p className="text-xs text-neutral-500">{producto.marca}</p>
+                      <p className="mt-2 text-sm font-semibold text-black">S/ {producto.precio.toFixed(2)}</p>
                     </div>
                   </article>
                 </Link>

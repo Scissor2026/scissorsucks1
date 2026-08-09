@@ -42,7 +42,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => toggleFavorito(producto.id)}
-                  className="absolute top-3 right-3 z-10 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100"
+                  className="absolute top-3 right-3 z-10 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100 overflow-hidden"
                   aria-pressed={activo}
                   aria-label={activo ? "Quitar de favoritos" : "Agregar a favoritos"}
                 >
@@ -58,7 +58,7 @@ export default function Home() {
                             filter:
                               "brightness(0) saturate(100%) invert(20%) sepia(90%) saturate(7000%) hue-rotate(330deg)",
                           }
-                        : undefined
+                        : {}
                     }
                   />
                 </button>

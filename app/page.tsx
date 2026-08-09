@@ -48,14 +48,12 @@ export default function Home() {
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
-                    className={`h-5 w-5 ${activo ? "text-pink-500" : "text-gray-900"}`}
-                    fill={activo ? "currentColor" : "transparent"}
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    className={`w-6 h-6 transition-all ${
+                      activo ? "fill-pink-500 stroke-pink-500" : "fill-transparent stroke-gray-900"
+                    }`}
                   >
-                    <path d="M20.8 4.6c-1.3-1.3-3.4-1.3-4.7 0L12 8.7 7.9 4.6c-1.3-1.3-3.4-1.3-4.7 0-1.3 1.3-1.3 3.4 0 4.7l4.6 4.6c.2.2.4.4.7.5.3.2.6.2.9 0 .3-.1.5-.3.7-.5l4.6-4.6c1.3-1.3 1.3-3.4 0-4.7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                   </svg>
                 </button>
                 <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-neutral-500 bg-white/70">

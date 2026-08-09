@@ -29,7 +29,7 @@ type ResenaInsert = Omit<Resena, "id">;
 export default function Home() {
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
-  const [reseñas, setReseñas] = useState<ResenasPorProducto>({});
+  const [resenas, setResenas] = useState<ResenasPorProducto>({});
   const [ratingTemp, setRatingTemp] = useState(0);
   const [comentarioTemp, setComentarioTemp] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -45,8 +45,13 @@ export default function Home() {
     }
   }, []);
 
+  useEffect(() => {
+    const adminValue = window.localStorage.getItem("scissor_admin");
+    setIsAdmin(adminValue === "true");
+  }, []);
+
   const fetchResenas = async () => {
-    const { data, error } = await supabase.from("resenas").select("*");
+    const { data, error } = await supabase.from<Resena>("resenas").select("*");
     if (error) {
       console.error("Error cargando reseñas:", error);
       return;
@@ -55,26 +60,14 @@ export default function Home() {
     const agrupadas: ResenasPorProducto = {};
     data?.forEach((item) => {
       const key = String(item.producto_id);
-      const resena: Resena = {
-        id: item.id,
-        producto_id: item.producto_id,
-        rating: item.rating,
-        comentario: item.comentario,
-        fecha: item.fecha,
-      };
-      agrupadas[key] = agrupadas[key] ? [resena, ...agrupadas[key]] : [resena];
+      agrupadas[key] = agrupadas[key] ? [item, ...agrupadas[key]] : [item];
     });
 
-    setReseñas(agrupadas);
+    setResenas(agrupadas);
   };
 
   useEffect(() => {
     void fetchResenas();
-  }, []);
-
-  useEffect(() => {
-    const a = window.localStorage.getItem("scissor_admin");
-    setIsAdmin(a === "true");
   }, []);
 
   const toggleFavorito = (id: string) => {
@@ -105,7 +98,6 @@ export default function Home() {
     };
 
     const { error } = await supabase.from("resenas").insert([nuevaResena]);
-
     if (error) {
       console.error("Error guardando reseña:", error);
       return;
@@ -122,6 +114,7 @@ export default function Home() {
       console.error("Error eliminando reseña:", error);
       return;
     }
+
     void fetchResenas();
   };
 
@@ -136,83 +129,82 @@ export default function Home() {
     }
   };
 
-  const reseñasActuales = productoSeleccionado
-    ? reseñas[productoSeleccionado.id.toString()] ?? []
-    : [];
+  const resenasActuales = productoSeleccionado ? resenas[productoSeleccionado.id.toString()] ?? [] : [];
 
   return (
-    <main className="min-h-screen bg-white text-black px-3 py-4">
-      <section className="grid grid-cols-2 gap-3">
-        {productos.map((producto) => {
-          const productId = producto.id.toString();
-          const activo = favoritos.includes(productId);
-          const imageUrl = producto.imagenes[0] ?? "";
-          const reseñasProducto = reseñas[productId] ?? [];
-          const promedio =
-            reseñasProducto.length > 0
-              ? reseñasProducto.reduce((acc, reseña) => acc + reseña.rating, 0) / reseñasProducto.length
-              : 0;
-          const estrellasPromedio = Math.round(promedio);
+    <main className="min-h-screen bg-white text-black px-4 py-6">
+      <section className="mt-10">
+        <h1 className="text-4xl font-bold text-black sm:text-5xl">Productos</h1>
+        <div className="mt-8 grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {productos.map((producto) => {
+            const productId = producto.id.toString();
+            const activo = favoritos.includes(productId);
+            const imageUrl = producto.imagenes[0] ?? "";
+            const resenasProducto = resenas[productId] ?? [];
+            const promedio =
+              resenasProducto.length > 0
+                ? resenasProducto.reduce((acc, resena) => acc + resena.rating, 0) / resenasProducto.length
+                : 0;
+            const estrellasPromedio = Math.round(promedio);
 
-          return (
-            <article
-              key={producto.id}
-              className="space-y-3 cursor-pointer"
-              onClick={() => {
-                setProductoSeleccionado(producto);
-                setRatingTemp(0);
-                setComentarioTemp("");
-              }}
-            >
-              <div className="aspect-square bg-neutral-100 rounded-lg relative overflow-hidden border border-neutral-200">
-                <img
-                  src={imageUrl}
-                  alt={producto.nombre}
-                  className="object-cover w-full h-full"
-                />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleFavorito(productId);
-                  }}
-                  className="absolute top-3 right-3 z-10 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100"
-                  aria-pressed={activo}
-                  aria-label={activo ? "Quitar de favoritos" : "Agregar a favoritos"}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    className={`w-6 h-6 transition-all ${
-                      activo ? "fill-pink-500 stroke-pink-500" : "fill-transparent stroke-gray-900"
-                    }`}
+            return (
+              <article
+                key={producto.id}
+                className="group space-y-3 cursor-pointer rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                onClick={() => {
+                  setProductoSeleccionado(producto);
+                  setRatingTemp(0);
+                  setComentarioTemp("");
+                }}
+              >
+                <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100 relative">
+                  <img src={imageUrl} alt={producto.nombre} className="object-cover w-full h-full" />
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      toggleFavorito(productId);
+                    }}
+                    className="absolute top-3 right-3 z-10 rounded-full bg-white p-2 shadow-sm ring-1 ring-neutral-200 transition hover:bg-neutral-100"
+                    aria-pressed={activo}
+                    aria-label={activo ? "Quitar de favoritos" : "Agregar a favoritos"}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                  </svg>
-                </button>
-              </div>
-              <div className="px-1">
-                <p className="text-sm font-semibold text-black">{producto.nombre}</p>
-                <p className="text-xs text-neutral-500">{producto.marca}</p>
-                <p className="text-sm font-semibold text-black">S/ {producto.precio.toFixed(2)}</p>
-                {reseñasProducto.length > 0 ? (
-                  <p className="mt-1 text-sm text-yellow-500">
-                    {Array.from({ length: 5 }, (_, i) => (
-                          <span key={i} className={`text-lg ${i < estrellasPromedio ? "text-yellow-400" : "text-neutral-300"}`}>
-                        ★
-                      </span>
-                    ))}{" "}
-                    <span className="text-xs text-neutral-500">({reseñasProducto.length})</span>
-                  </p>
-                ) : (
-                  <p className="mt-1 text-xs text-gray-400">Sin reseñas aún</p>
-                )}
-              </div>
-            </article>
-          );
-        })}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      className={`w-6 h-6 transition-all ${activo ? "fill-pink-500 stroke-pink-500" : "fill-transparent stroke-gray-900"}`}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-black">{producto.nombre}</p>
+                  <p className="text-xs text-neutral-500">{producto.marca}</p>
+                  <p className="mt-2 text-sm font-semibold text-black">S/ {producto.precio.toFixed(2)}</p>
+                  {resenasProducto.length > 0 ? (
+                    <p className="mt-1 text-sm text-yellow-500">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <span key={i} className={i < estrellasPromedio ? "text-yellow-400" : "text-neutral-300"}>
+                          ★
+                        </span>
+                      ))}{" "}
+                      <span className="text-xs text-neutral-500">({resenasProducto.length})</span>
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs text-gray-400">Sin reseñas aún</p>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
       {productoSeleccionado && (
@@ -243,13 +235,13 @@ export default function Home() {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
-                className={`w-6 h-6 transition-all ${
-                  productoSeleccionado && favoritos.includes(productoSeleccionado.id.toString())
-                    ? "fill-pink-500 stroke-pink-500"
-                    : "fill-transparent stroke-gray-900"
-                }`}
+                className={`w-6 h-6 transition-all ${productoSeleccionado && favoritos.includes(productoSeleccionado.id.toString()) ? "fill-pink-500 stroke-pink-500" : "fill-transparent stroke-gray-900"}`}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                />
               </svg>
             </button>
 
@@ -288,108 +280,110 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-4 rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-4">
-                  <div>
-                    <p className="text-sm font-semibold text-neutral-900">Reseñas</p>
-                    {reseñasActuales.length === 0 ? (
-                      <p className="mt-2 text-sm text-neutral-600">Sé el primero en dejar una reseña.</p>
-                    ) : (
-                      <div className="mt-3 space-y-3 max-h-32 overflow-y-auto pr-2">
-                        {reseñasActuales.map((reseña: Resena) => (
-                          <div key={reseña.id} className="rounded-2xl bg-white p-3 border border-neutral-200">
-                            <div className="flex items-center gap-1">
-                                  {Array.from({ length: 5 }, (_, i) => (
-                                    <span
-                                      key={i}
-                                      className={`text-lg ${i < reseña.rating ? "text-yellow-400" : "text-neutral-300"}`}
-                                    >
-                                      ★
-                                    </span>
-                                  ))}
-                                  {isAdmin && (
-                                    <button
-                                      type="button"
-                                      onClick={() => eliminarResena(reseña.id)}
-                                      className="ml-auto text-xs text-red-500"
-                                    >
-                                      Eliminar
-                                    </button>
-                                  )}
-                            </div>
-                            <p className="mt-2 text-sm text-neutral-700">{reseña.comentario}</p>
-                            <p className="mt-2 text-xs text-neutral-500">{reseña.fecha}</p>
+              <div className="space-y-4 rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-4">
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">Reseñas</p>
+                  {resenasActuales.length === 0 ? (
+                    <p className="mt-2 text-sm text-neutral-600">Sé el primero en dejar una reseña.</p>
+                  ) : (
+                    <div className="mt-3 space-y-3 max-h-32 overflow-y-auto pr-2">
+                      {resenasActuales.map((resena: Resena) => (
+                        <div key={resena.id} className="rounded-2xl bg-white p-3 border border-neutral-200">
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }, (_, i) => (
+                              <span key={i} className={`text-lg ${i < resena.rating ? "text-yellow-400" : "text-neutral-300"}`}>
+                                ★
+                              </span>
+                            ))}
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => eliminarResena(resena.id)}
+                                className="ml-auto text-xs text-red-500"
+                              >
+                                Eliminar
+                              </button>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setRatingTemp(i + 1)}
-                          className={`rounded-full px-2 py-1 text-lg transition ${
-                            i < ratingTemp ? "text-yellow-400" : "text-neutral-300"
-                          }`}
-                          aria-label={`Seleccionar ${i + 1} estrellas`}
-                        >
-                          ★
-                        </button>
+                          <p className="mt-2 text-sm text-neutral-700">{resena.comentario}</p>
+                          <p className="mt-2 text-xs text-neutral-500">{resena.fecha}</p>
+                        </div>
                       ))}
                     </div>
-                    <textarea
-                      value={comentarioTemp}
-                      onChange={(event) => setComentarioTemp(event.target.value)}
-                      rows={4}
-                      placeholder="Escribe tu reseña..."
-                      className="w-full rounded-3xl border border-neutral-200 bg-white p-3 text-sm text-neutral-700 outline-none focus:border-black focus:ring-2 focus:ring-black/10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => productoSeleccionado && agregarResena(productoSeleccionado.id.toString())}
-                      className="w-full rounded-3xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900"
-                    >
-                      Publicar Reseña
-                    </button>
-                  </div>
+                  )}
                 </div>
 
-                <div className="grid gap-3">
-                  <a
-                    href="https://wa.me/51982846339"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex w-full items-center justify-center rounded-3xl bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setRatingTemp(i + 1)}
+                        className={`rounded-full px-2 py-1 text-lg transition ${
+                          i < ratingTemp ? "text-yellow-400" : "text-neutral-300"
+                        }`}
+                        aria-label={`Seleccionar ${i + 1} estrellas`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={comentarioTemp}
+                    onChange={(event) => setComentarioTemp(event.target.value)}
+                    rows={4}
+                    placeholder="Escribe tu reseña..."
+                    className="w-full rounded-3xl border border-neutral-200 bg-white p-3 text-sm text-neutral-700 outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => productoSeleccionado && agregarResena(productoSeleccionado.id.toString())}
+                    className="w-full rounded-3xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900"
                   >
-                    WhatsApp
-                  </a>
-                  <a
-                    href="https://www.instagram.com/madebyzeviq?igsh=dDY4a3UwdGk1bjN3"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex w-full items-center justify-center rounded-3xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:from-purple-600 hover:to-pink-600"
-                  >
-                    Instagram
-                  </a>
+                    Publicar Reseña
+                  </button>
                 </div>
+              </div>
+
+              <div className="grid gap-3">
+                <a
+                  href="https://wa.me/51982846339"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-3xl bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+                >
+                  WhatsApp
+                </a>
+                <a
+                  href="https://www.instagram.com/madebyzeviq?igsh=dDY4a3UwdGk1bjN3"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-3xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:from-purple-600 hover:to-pink-600"
+                >
+                  Instagram
+                </a>
               </div>
             </div>
           </div>
         </div>
       )}
-        <footer>
-          <button
-            type="button"
-            onClick={activateAdmin}
-            className="text-xs text-gray-400 hover:text-black mt-8 block text-center cursor-pointer"
-          >
-            Admin
-          </button>
-        </footer>
+
+      <footer>
+        <button
+          type="button"
+          onClick={activateAdmin}
+          className="mt-8 block w-full text-center text-xs text-gray-400 hover:text-black"
+        >
+          Admin
+        </button>
+      </footer>
     </main>
   );
 }
+'''
+path.write_text(content, encoding='utf-8')
+print('wrote', len(content), 'chars to', path)
+PY

@@ -9,29 +9,25 @@ export default function Home() {
           <Image
             src="/logo.png"
             alt="SCISSOR SUCKS logo"
-            width={140}
-            height={35}
-            className="object-contain"
+            width={32}
+            height={32}
+            className="h-8 w-auto object-contain"
           />
+          <span className="text-base font-bold tracking-wider text-black">SCISSOR SUCKS</span>
         </div>
 
         <button
           type="button"
-          className="text-neutral-700 hover:text-red-600 transition"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-700 transition hover:bg-neutral-100"
           aria-label="Favoritos"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <Image
+            src="/corazon.png"
+            alt="Favoritos"
+            width={24}
+            height={24}
             className="h-6 w-6"
-          >
-            <path d="M20.8 4.6c-1.3-1.3-3.4-1.3-4.7 0L12 8.7 7.9 4.6c-1.3-1.3-3.4-1.3-4.7 0-1.3 1.3-1.3 3.4 0 4.7l4.6 4.6c.2.2.4.4.7.5.3.2.6.2.9 0 .3-.1.5-.3.7-.5l4.6-4.6c1.3-1.3 1.3-3.4 0-4.7z" />
-          </svg>
+          />
         </button>
       </header>
 

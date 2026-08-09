@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
+import Link from "next/link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,7 +25,38 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-white text-black">
+        <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-16 h-16 overflow-hidden flex items-center justify-center shrink-0">
+              <Image
+                src="/logo.png"
+                alt="SCISSOR SUCKS logo"
+                width={40}
+                height={40}
+                className="object-cover scale-[1.7] mix-blend-multiply"
+              />
+            </div>
+            <span className="text-base font-bold tracking-wider text-black">SCISSOR SUCKS</span>
+          </Link>
+
+          <Link
+            href="/favoritos"
+            aria-label="Favoritos"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-700 transition hover:bg-neutral-100"
+          >
+            <Image
+              src="/grok_1786299036465.jpg"
+              alt="Favoritos"
+              width={32}
+              height={32}
+              className="h-8 w-8 object-contain"
+            />
+          </Link>
+        </header>
+
+        {children}
+      </body>
     </html>
   );
 }

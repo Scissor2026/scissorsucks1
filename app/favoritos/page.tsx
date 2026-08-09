@@ -45,7 +45,7 @@ export default function FavoritosPage() {
               return (
                 <Link
                   key={producto.id}
-                  href={`/producto/${producto.id}`}
+                  href={`/producto/${producto.id.toString()}`}
                   className="group space-y-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <article className="space-y-3">

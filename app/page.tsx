@@ -35,7 +35,7 @@ export default function Home() {
           const imageUrl = producto.imagenes[0] ?? "";
 
           return (
-            <Link key={producto.id} href={`/producto/${producto.id}`} className="space-y-3">
+            <Link key={producto.id} href={`/producto/${producto.id.toString()}`} className="space-y-3">
               <article className="space-y-3">
                 <div className="aspect-square bg-neutral-100 rounded-lg relative overflow-hidden border border-neutral-200">
                   <img

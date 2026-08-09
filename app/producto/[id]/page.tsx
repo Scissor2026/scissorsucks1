@@ -90,8 +90,7 @@ interface ProductoPageProps {
 }
 
 export default function ProductoPage({ params }: ProductoPageProps) {
-  const requestedId = String(params?.id);
-  const producto = productos.find((p) => String(p.id) === requestedId);
+  const producto = productos.find((p) => String(p.id) === String(params?.id));
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [imagenIndex, setImagenIndex] = useState(0);
 
@@ -220,6 +219,25 @@ export default function ProductoPage({ params }: ProductoPageProps) {
                   <p className="text-sm font-semibold text-neutral-900">Código</p>
                   <p className="mt-1 text-sm text-neutral-600">{producto.id}</p>
                 </div>
+              </div>
+
+              <div className="mt-6 grid gap-3">
+                <a
+                  href="https://wa.me/51982846339"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-3xl bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+                >
+                  WhatsApp
+                </a>
+                <a
+                  href="https://www.instagram.com/madebyzeviq?igsh=dDY4a3UwdGk1bjN3"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-3xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:from-purple-600 hover:to-pink-600"
+                >
+                  Instagram
+                </a>
               </div>
             </div>
           </div>

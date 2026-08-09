@@ -100,6 +100,12 @@ export default function Home() {
           const productId = producto.id.toString();
           const activo = favoritos.includes(productId);
           const imageUrl = producto.imagenes[0] ?? "";
+          const reseñasProducto = reseñas[productId] ?? [];
+          const promedio =
+            reseñasProducto.length > 0
+              ? reseñasProducto.reduce((acc, reseña) => acc + reseña.rating, 0) / reseñasProducto.length
+              : 0;
+          const estrellasPromedio = Math.round(promedio);
 
           return (
             <article
@@ -144,6 +150,18 @@ export default function Home() {
                 <p className="text-sm font-semibold text-black">{producto.nombre}</p>
                 <p className="text-xs text-neutral-500">{producto.marca}</p>
                 <p className="text-sm font-semibold text-black">S/ {producto.precio.toFixed(2)}</p>
+                {reseñasProducto.length > 0 ? (
+                  <p className="mt-1 text-sm text-yellow-500">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <span key={i} className={i < estrellasPromedio ? "text-yellow-400" : "text-neutral-300"}>
+                        ★
+                      </span>
+                    ))}{" "}
+                    <span className="text-xs text-neutral-500">({reseñasProducto.length})</span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-400">Sin reseñas aún</p>
+                )}
               </div>
             </article>
           );

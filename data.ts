@@ -9,6 +9,7 @@ export interface Producto {
   caracteristicas: string[];
   material: string;
   color: string;
+  tallas: string[];
   imagen: string;
   imagenes: string[];
   modelo3d?: string;
@@ -27,8 +28,9 @@ export const productos: Producto[] = [
     caracteristicas: ["Bordado de alta densidad", "Cierre ajustable", "Edición limitada"],
     material: "100% Algodón",
     color: "Negro",
+    tallas: ["S", "M", "L"],
     imagen: "/logo.png",
-    imagenes: ["/logo.png"],
+    imagenes: ["/logo.png", "/gorra.jpg", "/logo.png"],
     reseñas: []
   },
   {
@@ -42,8 +44,9 @@ export const productos: Producto[] = [
     caracteristicas: ["Textura satinada", "Cierre trasero", "Costuras reforzadas"],
     material: "Mezcla de poliéster",
     color: "Rojo",
+    tallas: ["S", "M", "L"],
     imagen: "/gorra.jpg",
-    imagenes: ["/gorra.jpg"],
+    imagenes: ["/gorra.jpg", "/logo.png", "/gorra.jpg", "/logo.png"],
     reseñas: []
   },
   {
@@ -57,8 +60,9 @@ export const productos: Producto[] = [
     caracteristicas: ["Visera plana", "Ajuste suave", "Forro transpirable"],
     material: "100% Algodón",
     color: "Gris",
+    tallas: ["S", "M", "L"],
     imagen: "/logo.png",
-    imagenes: ["/logo.png"],
+    imagenes: ["/logo.png", "/IMG_20260809_133253.jpg", "/logo.png"],
     reseñas: []
   },
   {
@@ -72,8 +76,9 @@ export const productos: Producto[] = [
     caracteristicas: ["Patrón camuflado", "Cierre ajustable", "Material resistente"],
     material: "Mezcla de algodón",
     color: "Verde camo",
+    tallas: ["S", "M", "L"],
     imagen: "/gorra.jpg",
-    imagenes: ["/gorra.jpg"],
+    imagenes: ["/gorra.jpg", "/logo.png", "/gorra.jpg"],
     reseñas: []
   },
   {
@@ -87,8 +92,9 @@ export const productos: Producto[] = [
     caracteristicas: ["Denim lavado", "Ajuste cómodo", "Etiqueta de cuero"],
     material: "100% Denim",
     color: "Azul",
+    tallas: ["S", "M", "L"],
     imagen: "/logo.png",
-    imagenes: ["/logo.png"],
+    imagenes: ["/logo.png", "/gorra.jpg", "/logo.png", "/gorra.jpg"],
     reseñas: []
   },
   {
@@ -102,8 +108,9 @@ export const productos: Producto[] = [
     caracteristicas: ["Malla trasera", "Ajuste snapback", "Frente estructurado"],
     material: "Algodón y malla",
     color: "Blanco",
+    tallas: ["S", "M", "L"],
     imagen: "/gorra.jpg",
-    imagenes: ["/gorra.jpg"],
+    imagenes: ["/gorra.jpg", "/logo.png", "/gorra.jpg"],
     reseñas: []
   }
 ];

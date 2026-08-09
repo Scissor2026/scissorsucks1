@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { productos } from "../lib/data";
 
 interface Producto {
@@ -28,6 +28,8 @@ export default function Home() {
   const [reseñas, setReseñas] = useState<ReseñasPorProducto>({});
   const [ratingTemp, setRatingTemp] = useState(0);
   const [comentarioTemp, setComentarioTemp] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const adminClickRef = useRef({ count: 0, timeout: 0 as number | null });
 
   useEffect(() => {
     const stored = window.localStorage.getItem("favoritos");
@@ -49,6 +51,11 @@ export default function Home() {
         setReseñas({});
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const a = window.localStorage.getItem("scissor_admin");
+    setIsAdmin(a === "true");
   }, []);
 
   const toggleFavorito = (id: string) => {
@@ -87,6 +94,42 @@ export default function Home() {
 
     setRatingTemp(0);
     setComentarioTemp("");
+  };
+
+  const eliminarReseña = (productoId: string, index: number) => {
+    setReseñas((prev) => {
+      const list = prev[productoId] ? [...prev[productoId]] : [];
+      if (index < 0 || index >= list.length) return prev;
+      list.splice(index, 1);
+      const next = { ...prev, [productoId]: list };
+      window.localStorage.setItem("scissor_reseñas", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleAdminClick = () => {
+    const ref = adminClickRef.current;
+    ref.count += 1;
+    if (ref.timeout) window.clearTimeout(ref.timeout);
+    ref.timeout = window.setTimeout(() => {
+      ref.count = 0;
+      ref.timeout = null;
+    }, 800);
+    if (ref.count >= 3) {
+      ref.count = 0;
+      if (ref.timeout) {
+        window.clearTimeout(ref.timeout);
+        ref.timeout = null;
+      }
+      const pwd = prompt("Clave de administrador:");
+      if (pwd === "scissor2026") {
+        window.localStorage.setItem("scissor_admin", "true");
+        setIsAdmin(true);
+        alert("Modo admin activado");
+      } else {
+        alert("Clave incorrecta");
+      }
+    }
   };
 
   const reseñasActuales = productoSeleccionado
@@ -153,7 +196,7 @@ export default function Home() {
                 {reseñasProducto.length > 0 ? (
                   <p className="mt-1 text-sm text-yellow-500">
                     {Array.from({ length: 5 }, (_, i) => (
-                      <span key={i} className={i < estrellasPromedio ? "text-yellow-400" : "text-neutral-300"}>
+                          <span key={i} className={`text-lg ${i < estrellasPromedio ? "text-yellow-400" : "text-neutral-300"}`}>
                         ★
                       </span>
                     ))}{" "}
@@ -252,14 +295,23 @@ export default function Home() {
                         {reseñasActuales.map((reseña, index) => (
                           <div key={index} className="rounded-2xl bg-white p-3 border border-neutral-200">
                             <div className="flex items-center gap-1">
-                              {Array.from({ length: 5 }, (_, i) => (
-                                <span
-                                  key={i}
-                                  className={`text-lg ${i < reseña.rating ? "text-yellow-400" : "text-neutral-300"}`}
-                                >
-                                  ★
-                                </span>
-                              ))}
+                                  {Array.from({ length: 5 }, (_, i) => (
+                                    <span
+                                      key={i}
+                                      className={`text-lg ${i < reseña.rating ? "text-yellow-400" : "text-neutral-300"}`}
+                                    >
+                                      ★
+                                    </span>
+                                  ))}
+                                  {isAdmin && (
+                                    <button
+                                      type="button"
+                                      onClick={() => eliminarReseña(productoSeleccionado.id.toString(), index)}
+                                      className="ml-auto text-xs text-red-500"
+                                    >
+                                      Eliminar
+                                    </button>
+                                  )}
                             </div>
                             <p className="mt-2 text-sm text-neutral-700">{reseña.comentario}</p>
                             <p className="mt-2 text-xs text-neutral-500">{reseña.fecha}</p>

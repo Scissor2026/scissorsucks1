@@ -24,6 +24,7 @@ interface Resena {
 }
 
 type ResenasPorProducto = Record<string, Resena[]>;
+type ResenaInsert = Omit<Resena, "id">;
 
 export default function Home() {
   const [favoritos, setFavoritos] = useState<string[]>([]);
@@ -96,14 +97,14 @@ export default function Home() {
       year: "numeric",
     });
 
-    const { error } = await supabase.from("resenas").insert([
-      {
-        producto_id: Number(productoId),
-        rating: ratingTemp,
-        comentario,
-        fecha,
-      },
-    ]);
+    const nuevaResena: ResenaInsert = {
+      producto_id: Number(productoId),
+      rating: ratingTemp,
+      comentario,
+      fecha,
+    };
+
+    const { error } = await supabase.from("resenas").insert([nuevaResena]);
 
     if (error) {
       console.error("Error guardando reseña:", error);
@@ -295,7 +296,7 @@ export default function Home() {
                       <p className="mt-2 text-sm text-neutral-600">Sé el primero en dejar una reseña.</p>
                     ) : (
                       <div className="mt-3 space-y-3 max-h-32 overflow-y-auto pr-2">
-                        {reseñasActuales.map((reseña) => (
+                        {reseñasActuales.map((reseña: Resena) => (
                           <div key={reseña.id} className="rounded-2xl bg-white p-3 border border-neutral-200">
                             <div className="flex items-center gap-1">
                                   {Array.from({ length: 5 }, (_, i) => (
@@ -309,7 +310,7 @@ export default function Home() {
                                   {isAdmin && (
                                     <button
                                       type="button"
-                                      onClick={() => eliminarReseña(reseña.id)}
+                                      onClick={() => eliminarResena(reseña.id)}
                                       className="ml-auto text-xs text-red-500"
                                     >
                                       Eliminar
@@ -349,7 +350,7 @@ export default function Home() {
                     />
                     <button
                       type="button"
-                      onClick={() => productoSeleccionado && agregarReseña(productoSeleccionado.id.toString())}
+                      onClick={() => productoSeleccionado && agregarResena(productoSeleccionado.id.toString())}
                       className="w-full rounded-3xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900"
                     >
                       Publicar Reseña

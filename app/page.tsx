@@ -22,11 +22,11 @@ export default function Home() {
           aria-label="Favoritos"
         >
           <Image
-            src="/corazon.png"
+            src="/1000038295.jpg"
             alt="Favoritos"
             width={24}
             height={24}
-            className="h-6 w-6"
+            className="h-6 w-6 object-contain"
           />
         </button>
       </header>

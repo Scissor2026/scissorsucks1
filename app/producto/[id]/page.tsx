@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { productos } from "../../../data";
+import { productos } from "../../../lib/data";
 
 interface ProductoPageProps {
   params: {

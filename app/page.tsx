@@ -15,19 +15,20 @@ interface Producto {
   imagenes: string[];
 }
 
-interface Reseña {
+interface Resena {
   id: number;
+  producto_id: number;
   rating: number;
   comentario: string;
   fecha: string;
 }
 
-type ReseñasPorProducto = Record<string, Reseña[]>;
+type ResenasPorProducto = Record<string, Resena[]>;
 
 export default function Home() {
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
-  const [reseñas, setReseñas] = useState<ReseñasPorProducto>({});
+  const [reseñas, setReseñas] = useState<ResenasPorProducto>({});
   const [ratingTemp, setRatingTemp] = useState(0);
   const [comentarioTemp, setComentarioTemp] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -43,30 +44,31 @@ export default function Home() {
     }
   }, []);
 
-  const fetchReseñas = async () => {
-    const { data, error } = await supabase.from("reseñas").select("*");
+  const fetchResenas = async () => {
+    const { data, error } = await supabase.from("resenas").select("*");
     if (error) {
       console.error("Error cargando reseñas:", error);
       return;
     }
 
-    const agrupadas: ReseñasPorProducto = {};
+    const agrupadas: ResenasPorProducto = {};
     data?.forEach((item) => {
       const key = String(item.producto_id);
-      const reseña: Reseña = {
+      const resena: Resena = {
         id: item.id,
+        producto_id: item.producto_id,
         rating: item.rating,
         comentario: item.comentario,
         fecha: item.fecha,
       };
-      agrupadas[key] = agrupadas[key] ? [reseña, ...agrupadas[key]] : [reseña];
+      agrupadas[key] = agrupadas[key] ? [resena, ...agrupadas[key]] : [resena];
     });
 
     setReseñas(agrupadas);
   };
 
   useEffect(() => {
-    void fetchReseñas();
+    void fetchResenas();
   }, []);
 
   useEffect(() => {
@@ -82,7 +84,7 @@ export default function Home() {
     });
   };
 
-  const agregarReseña = async (productoId: string) => {
+  const agregarResena = async (productoId: string) => {
     const comentario = comentarioTemp.trim();
     if (ratingTemp === 0 || comentario.length === 0) {
       return;
@@ -94,12 +96,14 @@ export default function Home() {
       year: "numeric",
     });
 
-    const { error } = await supabase.from("reseñas").insert({
-      producto_id: Number(productoId),
-      rating: ratingTemp,
-      comentario,
-      fecha,
-    });
+    const { error } = await supabase.from("resenas").insert([
+      {
+        producto_id: Number(productoId),
+        rating: ratingTemp,
+        comentario,
+        fecha,
+      },
+    ]);
 
     if (error) {
       console.error("Error guardando reseña:", error);
@@ -108,16 +112,16 @@ export default function Home() {
 
     setRatingTemp(0);
     setComentarioTemp("");
-    void fetchReseñas();
+    void fetchResenas();
   };
 
-  const eliminarReseña = async (reseñaId: number) => {
-    const { error } = await supabase.from("reseñas").delete().eq("id", reseñaId);
+  const eliminarResena = async (resenaId: number) => {
+    const { error } = await supabase.from("resenas").delete().eq("id", resenaId);
     if (error) {
       console.error("Error eliminando reseña:", error);
       return;
     }
-    void fetchReseñas();
+    void fetchResenas();
   };
 
   const activateAdmin = () => {

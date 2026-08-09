@@ -14,9 +14,20 @@ interface Producto {
   imagenes: string[];
 }
 
+interface Reseña {
+  rating: number;
+  comentario: string;
+  fecha: string;
+}
+
+type ReseñasPorProducto = Record<string, Reseña[]>;
+
 export default function Home() {
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
+  const [reseñas, setReseñas] = useState<ReseñasPorProducto>({});
+  const [ratingTemp, setRatingTemp] = useState(0);
+  const [comentarioTemp, setComentarioTemp] = useState("");
 
   useEffect(() => {
     const stored = window.localStorage.getItem("favoritos");
@@ -29,6 +40,17 @@ export default function Home() {
     }
   }, []);
 
+  useEffect(() => {
+    const stored = window.localStorage.getItem("scissor_reseñas");
+    if (stored) {
+      try {
+        setReseñas(JSON.parse(stored));
+      } catch {
+        setReseñas({});
+      }
+    }
+  }, []);
+
   const toggleFavorito = (id: string) => {
     setFavoritos((prev) => {
       const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
@@ -36,6 +58,40 @@ export default function Home() {
       return next;
     });
   };
+
+  const agregarReseña = (productoId: string) => {
+    const comentario = comentarioTemp.trim();
+    if (ratingTemp === 0 || comentario.length === 0) {
+      return;
+    }
+
+    const nuevaReseña: Reseña = {
+      rating: ratingTemp,
+      comentario,
+      fecha: new Date().toLocaleDateString("es-PE", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+    };
+
+    setReseñas((prev) => {
+      const prevList = prev[productoId] ?? [];
+      const next = {
+        ...prev,
+        [productoId]: [nuevaReseña, ...prevList],
+      };
+      window.localStorage.setItem("scissor_reseñas", JSON.stringify(next));
+      return next;
+    });
+
+    setRatingTemp(0);
+    setComentarioTemp("");
+  };
+
+  const reseñasActuales = productoSeleccionado
+    ? reseñas[productoSeleccionado.id.toString()] ?? []
+    : [];
 
   return (
     <main className="min-h-screen bg-white text-black px-3 py-4">
@@ -49,7 +105,11 @@ export default function Home() {
             <article
               key={producto.id}
               className="space-y-3 cursor-pointer"
-              onClick={() => setProductoSeleccionado(producto)}
+              onClick={() => {
+                setProductoSeleccionado(producto);
+                setRatingTemp(0);
+                setComentarioTemp("");
+              }}
             >
               <div className="aspect-square bg-neutral-100 rounded-lg relative overflow-hidden border border-neutral-200">
                 <img
@@ -163,25 +223,85 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid gap-3">
-                <a
-                  href="https://wa.me/51982846339"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-3xl bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
-                >
-                  WhatsApp
-                </a>
-                <a
-                  href="https://www.instagram.com/madebyzeviq?igsh=dDY4a3UwdGk1bjN3"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-3xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:from-purple-600 hover:to-pink-600"
-                >
-                  Instagram
-                </a>
+                <div className="space-y-4 rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-4">
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-900">Reseñas</p>
+                    {reseñasActuales.length === 0 ? (
+                      <p className="mt-2 text-sm text-neutral-600">Sé el primero en dejar una reseña.</p>
+                    ) : (
+                      <div className="mt-3 space-y-3 max-h-32 overflow-y-auto pr-2">
+                        {reseñasActuales.map((reseña, index) => (
+                          <div key={index} className="rounded-2xl bg-white p-3 border border-neutral-200">
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <span
+                                  key={i}
+                                  className={`text-lg ${i < reseña.rating ? "text-yellow-400" : "text-neutral-300"}`}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                            <p className="mt-2 text-sm text-neutral-700">{reseña.comentario}</p>
+                            <p className="mt-2 text-xs text-neutral-500">{reseña.fecha}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setRatingTemp(i + 1)}
+                          className={`rounded-full px-2 py-1 text-lg transition ${
+                            i < ratingTemp ? "text-yellow-400" : "text-neutral-300"
+                          }`}
+                          aria-label={`Seleccionar ${i + 1} estrellas`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={comentarioTemp}
+                      onChange={(event) => setComentarioTemp(event.target.value)}
+                      rows={4}
+                      placeholder="Escribe tu reseña..."
+                      className="w-full rounded-3xl border border-neutral-200 bg-white p-3 text-sm text-neutral-700 outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => productoSeleccionado && agregarReseña(productoSeleccionado.id.toString())}
+                      className="w-full rounded-3xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900"
+                    >
+                      Publicar Reseña
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid gap-3">
+                  <a
+                    href="https://wa.me/51982846339"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex w-full items-center justify-center rounded-3xl bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+                  >
+                    WhatsApp
+                  </a>
+                  <a
+                    href="https://www.instagram.com/madebyzeviq?igsh=dDY4a3UwdGk1bjN3"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex w-full items-center justify-center rounded-3xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:from-purple-600 hover:to-pink-600"
+                  >
+                    Instagram
+                  </a>
+                </div>
               </div>
             </div>
           </div>

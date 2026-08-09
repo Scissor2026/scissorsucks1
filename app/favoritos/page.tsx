@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { productos } from "../../lib/data";
+import { supabase } from "../../lib/supabase";
 
 interface Producto {
   id: number;
@@ -16,6 +17,7 @@ interface Producto {
 
  
 interface Reseña {
+  id: number;
   rating: number;
   comentario: string;
   fecha: string;
@@ -42,15 +44,30 @@ export default function FavoritosPage() {
     }
   }, []);
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem("scissor_reseñas");
-    if (stored) {
-      try {
-        setReseñas(JSON.parse(stored));
-      } catch {
-        setReseñas({});
-      }
+  const fetchReseñas = async () => {
+    const { data, error } = await supabase.from("reseñas").select("*");
+    if (error) {
+      console.error("Error cargando reseñas:", error);
+      return;
     }
+
+    const agrupadas: ReseñasPorProducto = {};
+    data?.forEach((item) => {
+      const key = String(item.producto_id);
+      const reseña: Reseña = {
+        id: item.id,
+        rating: item.rating,
+        comentario: item.comentario,
+        fecha: item.fecha,
+      };
+      agrupadas[key] = agrupadas[key] ? [reseña, ...agrupadas[key]] : [reseña];
+    });
+
+    setReseñas(agrupadas);
+  };
+
+  useEffect(() => {
+    void fetchReseñas();
   }, []);
 
   useEffect(() => {
@@ -69,15 +86,13 @@ export default function FavoritosPage() {
     }
   };
 
-  const eliminarReseña = (productoId: string, index: number) => {
-    setReseñas((prev) => {
-      const list = prev[productoId] ? [...prev[productoId]] : [];
-      if (index < 0 || index >= list.length) return prev;
-      list.splice(index, 1);
-      const next = { ...prev, [productoId]: list };
-      window.localStorage.setItem("scissor_reseñas", JSON.stringify(next));
-      return next;
-    });
+  const eliminarReseña = async (reseñaId: number) => {
+    const { error } = await supabase.from("reseñas").delete().eq("id", reseñaId);
+    if (error) {
+      console.error("Error eliminando reseña:", error);
+      return;
+    }
+    void fetchReseñas();
   };
 
   const toggleFavorito = (id: string) => {
@@ -88,32 +103,31 @@ export default function FavoritosPage() {
     });
   };
 
-  const agregarReseña = (productoId: string) => {
+  const agregarReseña = async (productoId: string) => {
     const comentario = comentarioTemp.trim();
     if (ratingTemp === 0 || comentario.length === 0) return;
 
-    const nuevaReseña: Reseña = {
+    const fecha = new Date().toLocaleDateString("es-PE", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    const { error } = await supabase.from("reseñas").insert({
+      producto_id: Number(productoId),
       rating: ratingTemp,
       comentario,
-      fecha: new Date().toLocaleDateString("es-PE", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
-    };
-
-    setReseñas((prev) => {
-      const prevList = prev[productoId] ?? [];
-      const next = {
-        ...prev,
-        [productoId]: [nuevaReseña, ...prevList],
-      };
-      window.localStorage.setItem("scissor_reseñas", JSON.stringify(next));
-      return next;
+      fecha,
     });
+
+    if (error) {
+      console.error("Error guardando reseña:", error);
+      return;
+    }
 
     setRatingTemp(0);
     setComentarioTemp("");
+    void fetchReseñas();
   };
 
   const favoritosProductos = productos.filter((producto) => favoritos.includes(producto.id.toString()));
@@ -282,8 +296,8 @@ export default function FavoritosPage() {
                       <p className="mt-2 text-sm text-neutral-600">Sé el primero en dejar una reseña.</p>
                     ) : (
                       <div className="mt-3 space-y-3 max-h-32 overflow-y-auto pr-2">
-                        {reseñasActuales.map((reseña, index) => (
-                          <div key={index} className="rounded-2xl bg-white p-3 border border-neutral-200">
+                        {reseñasActuales.map((reseña) => (
+                          <div key={reseña.id} className="rounded-2xl bg-white p-3 border border-neutral-200">
                             <div className="flex items-center gap-1">
                               {Array.from({ length: 5 }, (_, i) => (
                                 <span key={i} className={`text-lg ${i < reseña.rating ? "text-yellow-400" : "text-neutral-300"}`}>
@@ -293,7 +307,7 @@ export default function FavoritosPage() {
                               {isAdmin && (
                                 <button
                                   type="button"
-                                  onClick={() => eliminarReseña(productoSeleccionado!.id.toString(), index)}
+                                  onClick={() => eliminarReseña(reseña.id)}
                                   className="ml-auto text-xs text-red-500"
                                 >
                                   Eliminar

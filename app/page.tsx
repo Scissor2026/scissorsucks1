@@ -1,19 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { productos } from "../data";
 
 export default function Home() {
-  const [favoritos, setFavoritos] = useState<Set<string>>(new Set());
+  const [favoritos, setFavoritos] = useState<string[]>([]);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("favoritos");
+    if (stored) {
+      try {
+        setFavoritos(JSON.parse(stored));
+      } catch {
+        setFavoritos([]);
+      }
+    }
+  }, []);
 
   const toggleFavorito = (id: string) => {
     setFavoritos((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
+      window.localStorage.setItem("favoritos", JSON.stringify(next));
       return next;
     });
   };
@@ -22,7 +30,7 @@ export default function Home() {
     <main className="min-h-screen bg-white text-black px-3 py-4">
       <section className="grid grid-cols-2 gap-3">
         {productos.map((producto) => {
-          const activo = favoritos.has(producto.id);
+          const activo = favoritos.includes(producto.id);
           return (
             <article key={producto.id} className="space-y-3">
               <div className="aspect-square bg-neutral-100 rounded-lg relative overflow-hidden border border-neutral-200">
@@ -34,22 +42,25 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => toggleFavorito(producto.id)}
-                  className="absolute top-3 right-3 z-10 rounded-full bg-white/90 p-2 shadow-sm transition hover:bg-white"
+                  className="absolute top-3 right-3 z-10 rounded-full bg-white p-2 shadow-sm transition hover:bg-neutral-100"
                   aria-pressed={activo}
                   aria-label={activo ? "Quitar de favoritos" : "Agregar a favoritos"}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill={activo ? "red" : "transparent"}
-                    stroke={activo ? "red" : "currentColor"}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6"
-                  >
-                    <path d="M20.8 4.6c-1.3-1.3-3.4-1.3-4.7 0L12 8.7 7.9 4.6c-1.3-1.3-3.4-1.3-4.7 0-1.3 1.3-1.3 3.4 0 4.7l4.6 4.6c.2.2.4.4.7.5.3.2.6.2.9 0 .3-.1.5-.3.7-.5l4.6-4.6c1.3-1.3 1.3-3.4 0-4.7z" />
-                  </svg>
+                  <Image
+                    src="/grok_1786299036465.jpg"
+                    alt="Favorito"
+                    width={24}
+                    height={24}
+                    className="h-6 w-6 object-contain"
+                    style={
+                      activo
+                        ? {
+                            filter:
+                              "brightness(0) saturate(100%) invert(20%) sepia(90%) saturate(7000%) hue-rotate(330deg)",
+                          }
+                        : undefined
+                    }
+                  />
                 </button>
                 <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-neutral-500 bg-white/70">
                   [SCISSOR SUCKS]

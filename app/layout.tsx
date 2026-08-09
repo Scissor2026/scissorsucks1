@@ -28,13 +28,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-white text-black">
         <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-16 h-16 overflow-hidden flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 overflow-hidden flex items-center justify-center shrink-0">
               <Image
                 src="/IMG_20260809_133253.jpg"
                 alt="SCISSOR SUCKS logo"
-                width={56}
-                height={56}
-                className="w-14 h-14 object-cover scale-[1.7] mix-blend-multiply"
+                width={40}
+                height={40}
+                className="w-10 h-10 object-contain mix-blend-multiply"
               />
             </div>
             <span className="text-base font-bold tracking-wider text-black">SCISSOR SUCKS</span>

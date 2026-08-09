@@ -92,7 +92,7 @@ export default function Home() {
 
       {productoSeleccionado && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl rounded-[2rem] bg-white p-6 shadow-2xl relative">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl bg-white p-5 shadow-2xl relative">
             <button
               type="button"
               onClick={() => setProductoSeleccionado(null)}
@@ -128,23 +128,21 @@ export default function Home() {
               </svg>
             </button>
 
-            <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="overflow-hidden rounded-[1.5rem] border border-neutral-200 bg-neutral-100">
-                <img
-                  src={productoSeleccionado.imagenes[0]}
-                  alt={productoSeleccionado.nombre}
-                  className="h-[520px] w-full object-cover"
-                />
-              </div>
+            <div className="space-y-6">
+              <img
+                src={productoSeleccionado.imagenes[0]}
+                alt={productoSeleccionado.nombre}
+                className="w-full h-48 md:h-64 object-contain rounded-[1.25rem] border border-neutral-200 bg-neutral-100"
+              />
 
-              <div className="space-y-6">
-                <div className="space-y-3">
+              <div className="space-y-4">
+                <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">{productoSeleccionado.marca}</p>
-                  <h1 className="text-3xl font-bold text-black">{productoSeleccionado.nombre}</h1>
-                  <p className="text-3xl font-semibold text-black">S/ {productoSeleccionado.precio.toFixed(2)}</p>
+                  <h1 className="text-2xl font-bold text-black">{productoSeleccionado.nombre}</h1>
+                  <p className="text-2xl font-semibold text-black">S/ {productoSeleccionado.precio.toFixed(2)}</p>
                 </div>
 
-                <div className="space-y-4 rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-6">
+                <div className="space-y-4 rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-4">
                   <div>
                     <p className="text-sm font-semibold text-neutral-900">Descripción</p>
                     <p className="mt-2 text-sm leading-6 text-neutral-600">{productoSeleccionado.descripcion}</p>
@@ -164,26 +162,26 @@ export default function Home() {
                       <p className="mt-1 text-sm text-neutral-600">{productoSeleccionado.id}</p>
                     </div>
                   </div>
-
-                  <div className="mt-6 grid gap-3">
-                    <a
-                      href="https://wa.me/51982846339"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex w-full items-center justify-center rounded-3xl bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
-                    >
-                      WhatsApp
-                    </a>
-                    <a
-                      href="https://www.instagram.com/madebyzeviq?igsh=dDY4a3UwdGk1bjN3"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex w-full items-center justify-center rounded-3xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:from-purple-600 hover:to-pink-600"
-                    >
-                      Instagram
-                    </a>
-                  </div>
                 </div>
+              </div>
+
+              <div className="grid gap-3">
+                <a
+                  href="https://wa.me/51982846339"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-3xl bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+                >
+                  WhatsApp
+                </a>
+                <a
+                  href="https://www.instagram.com/madebyzeviq?igsh=dDY4a3UwdGk1bjN3"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-3xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:from-purple-600 hover:to-pink-600"
+                >
+                  Instagram
+                </a>
               </div>
             </div>
           </div>

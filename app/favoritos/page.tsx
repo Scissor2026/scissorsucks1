@@ -14,9 +14,21 @@ interface Producto {
   imagenes: string[];
 }
 
+ 
+interface Reseña {
+  rating: number;
+  comentario: string;
+  fecha: string;
+}
+
+type ReseñasPorProducto = Record<string, Reseña[]>;
+
 export default function FavoritosPage() {
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
+  const [reseñas, setReseñas] = useState<ReseñasPorProducto>({});
+  const [ratingTemp, setRatingTemp] = useState(0);
+  const [comentarioTemp, setComentarioTemp] = useState("");
 
   useEffect(() => {
     const stored = window.localStorage.getItem("favoritos");
@@ -29,6 +41,17 @@ export default function FavoritosPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const stored = window.localStorage.getItem("scissor_reseñas");
+    if (stored) {
+      try {
+        setReseñas(JSON.parse(stored));
+      } catch {
+        setReseñas({});
+      }
+    }
+  }, []);
+
   const toggleFavorito = (id: string) => {
     setFavoritos((prev) => {
       const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
@@ -37,7 +60,37 @@ export default function FavoritosPage() {
     });
   };
 
+  const agregarReseña = (productoId: string) => {
+    const comentario = comentarioTemp.trim();
+    if (ratingTemp === 0 || comentario.length === 0) return;
+
+    const nuevaReseña: Reseña = {
+      rating: ratingTemp,
+      comentario,
+      fecha: new Date().toLocaleDateString("es-PE", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+    };
+
+    setReseñas((prev) => {
+      const prevList = prev[productoId] ?? [];
+      const next = {
+        ...prev,
+        [productoId]: [nuevaReseña, ...prevList],
+      };
+      window.localStorage.setItem("scissor_reseñas", JSON.stringify(next));
+      return next;
+    });
+
+    setRatingTemp(0);
+    setComentarioTemp("");
+  };
+
   const favoritosProductos = productos.filter((producto) => favoritos.includes(producto.id.toString()));
+
+  const reseñasActuales = productoSeleccionado ? reseñas[productoSeleccionado.id.toString()] ?? [] : [];
 
   return (
     <main className="min-h-screen bg-white text-black px-4 py-6">
@@ -53,6 +106,13 @@ export default function FavoritosPage() {
               const productId = producto.id.toString();
               const activo = favoritos.includes(productId);
               const imageUrl = producto.imagenes[0] ?? "";
+              const reseñasProducto = reseñas[productId] ?? [];
+              const promedio =
+                reseñasProducto.length > 0
+                  ? reseñasProducto.reduce((acc, r) => acc + r.rating, 0) / reseñasProducto.length
+                  : 0;
+              const estrellasPromedio = Math.round(promedio);
+
               return (
                 <article
                   key={producto.id}
@@ -92,6 +152,18 @@ export default function FavoritosPage() {
                     <p className="text-sm font-semibold text-black">{producto.nombre}</p>
                     <p className="text-xs text-neutral-500">{producto.marca}</p>
                     <p className="mt-2 text-sm font-semibold text-black">S/ {producto.precio.toFixed(2)}</p>
+                    {reseñasProducto.length > 0 ? (
+                      <p className="mt-1 text-sm text-yellow-500">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <span key={i} className={i < estrellasPromedio ? "text-yellow-400" : "text-neutral-300"}>
+                            ★
+                          </span>
+                        ))}{" "}
+                        <span className="text-xs text-neutral-500">({reseñasProducto.length})</span>
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs text-gray-400">Sin reseñas aún</p>
+                    )}
                   </div>
                 </article>
               );
@@ -174,6 +246,63 @@ export default function FavoritosPage() {
                   </div>
                 </div>
               </div>
+
+                <div className="space-y-4 rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-4">
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-900">Reseñas</p>
+                    {reseñasActuales.length === 0 ? (
+                      <p className="mt-2 text-sm text-neutral-600">Sé el primero en dejar una reseña.</p>
+                    ) : (
+                      <div className="mt-3 space-y-3 max-h-32 overflow-y-auto pr-2">
+                        {reseñasActuales.map((reseña, index) => (
+                          <div key={index} className="rounded-2xl bg-white p-3 border border-neutral-200">
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <span key={i} className={`text-lg ${i < reseña.rating ? "text-yellow-400" : "text-neutral-300"}`}>
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                            <p className="mt-2 text-sm text-neutral-700">{reseña.comentario}</p>
+                            <p className="mt-2 text-xs text-neutral-500">{reseña.fecha}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setRatingTemp(i + 1)}
+                          className={`rounded-full px-2 py-1 text-lg transition ${
+                            i < ratingTemp ? "text-yellow-400" : "text-neutral-300"
+                          }`}
+                          aria-label={`Seleccionar ${i + 1} estrellas`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={comentarioTemp}
+                      onChange={(event) => setComentarioTemp(event.target.value)}
+                      rows={4}
+                      placeholder="Escribe tu reseña..."
+                      className="w-full rounded-3xl border border-neutral-200 bg-white p-3 text-sm text-neutral-700 outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => productoSeleccionado && agregarReseña(productoSeleccionado.id.toString())}
+                      className="w-full rounded-3xl bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-900"
+                    >
+                      Publicar Reseña
+                    </button>
+                  </div>
+                </div>
 
               <div className="grid gap-3">
                 <a

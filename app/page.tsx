@@ -45,18 +45,19 @@ export default function Home() {
                   aria-pressed={activo}
                   aria-label={activo ? "Quitar de favoritos" : "Agregar a favoritos"}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill={activo ? "#ec4899" : "transparent"}
-                    stroke={activo ? "#ec4899" : "currentColor"}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6"
-                  >
-                    <path d="M20.8 4.6c-1.3-1.3-3.4-1.3-4.7 0L12 8.7 7.9 4.6c-1.3-1.3-3.4-1.3-4.7 0-1.3 1.3-1.3 3.4 0 4.7l4.6 4.6c.2.2.4.4.7.5.3.2.6.2.9 0 .3-.1.5-.3.7-.5l4.6-4.6c1.3-1.3 1.3-3.4 0-4.7z" />
-                  </svg>
+                  <img
+                    src="/b366a779db1cd096058da50a0026b663.jpg"
+                    alt="Favorito"
+                    className="h-5 w-5 object-contain"
+                    style={
+                      activo
+                        ? {
+                            filter:
+                              "brightness(0) saturate(100%) invert(20%) sepia(90%) saturate(7000%) hue-rotate(330deg)",
+                          }
+                        : undefined
+                    }
+                  />
                 </button>
                 <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-neutral-500 bg-white/70">
                   [SCISSOR SUCKS]
